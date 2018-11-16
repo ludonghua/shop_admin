@@ -10,35 +10,21 @@
     <el-container>
       <el-aside width="200">
         <el-menu
-          default-active="/users"
+          :default-active="$route.path.slice(1).split('-')[0]"
           class="el-menu-vertical-demo"
           background-color="#545c64"
           text-color="#fff"
           unique-opened
           router
           active-text-color="#ffd04b">
-          <el-submenu index="/users">
+          <el-submenu v-for="menuFrist in menuList" :key="menuFrist.id" :index="menuFrist.path">
             <template slot="title">
               <i class="el-icon-location"></i>
-              <span>用户列表</span>
+              <span>{{menuFrist.authName}}</span>
             </template>
-            <el-menu-item index="/users">
+            <el-menu-item :index="menuSecond.path" v-for="menuSecond in menuFrist.children" :key="menuSecond.id">
               <i class="el-icon-menu"></i>
-              <span slot="title">用户管理</span>
-            </el-menu-item>
-          </el-submenu>
-          <el-submenu index="2">
-            <template slot="title">
-              <i class="el-icon-location"></i>
-              <span>商品列表</span>
-            </template>
-            <el-menu-item index="2-1">
-              <i class="el-icon-menu"></i>
-              <span slot="title">商品管理</span>
-            </el-menu-item>
-            <el-menu-item index="2-2">
-              <i class="el-icon-menu"></i>
-              <span slot="title">管理</span>
+              <span slot="title">{{menuSecond.authName}}</span>
             </el-menu-item>
           </el-submenu>
         </el-menu>
@@ -51,9 +37,12 @@
 <script>
 export default {
   data() {
-    return {}
+    return {
+      menuList: []
+    }
   },
   methods: {
+    // 退出功能
     logout() {
       this.$confirm('您确定要退出吗？', '温馨提示', {
         confirmButtonText: '确定',
@@ -63,6 +52,14 @@ export default {
         localStorage.removeItem('token')
         this.$router.push('/login')
       })
+    }
+  },
+  async created() {
+    let res = await this.axios.get('menus')
+    // console.log(res)
+    let { meta: { status }, data } = res
+    if (status === 200) {
+      this.menuList = data
     }
   }
 }

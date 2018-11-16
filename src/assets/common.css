@@ -12,3 +12,13 @@ body {
 #app {
   height: 100%;
 }
+
+.el-breadcrumb {
+  height: 30px;
+  line-height: 30px;
+}
+
+.input-with-select {
+  width: 350px;
+  margin-bottom: 5px;
+}

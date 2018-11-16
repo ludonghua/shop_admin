@@ -48,7 +48,7 @@
         <template slot-scope="scope">
           <el-button type="primary" icon="el-icon-edit" size="small" plain @click="editShow(scope.row)"></el-button>
           <el-button type="danger" icon="el-icon-delete" size="small" plain @click="del(scope.row.id)"></el-button>
-          <el-button type="success" icon="el-icon-check" size="small" plain>分配角色</el-button>
+          <el-button type="success" icon="el-icon-check" size="small" plain @click="assignRoleShow(scope.row)">分配角色</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -85,7 +85,7 @@
       </div>
     </el-dialog>
     <!-- 修改用户对话框 -->
-    <el-dialog title="修改信息" :visible.sync="editUserShow">
+    <el-dialog title="修改信息" :visible.sync="editUserShow" width="40%">
       <el-form :model="editForm" :rules="editRules" ref="editForm">
         <el-form-item label="用户名" :label-width="formLabelWidth" prop="username">
           <el-tag type="info" v-model="editForm.username">{{editForm.username}}</el-tag>
@@ -100,6 +100,28 @@
       <div slot="footer" class="dialog-footer">
         <el-button @click="addShow = false">取 消</el-button>
         <el-button type="primary" @click="editUser">确 定</el-button>
+      </div>
+    </el-dialog>
+    <!-- 分配角色对话框 -->
+    <el-dialog title="角色分配" :visible.sync="assignShow" width="40%">
+      <el-form :model="assignForm" :rules="assignRules" ref="assignForm">
+        <el-form-item label="用户名" :label-width="formLabelWidth" prop="username">
+          <el-tag type="info" v-model="assignForm.username">{{assignForm.username}}</el-tag>
+        </el-form-item>
+        <el-form-item label="角色列表" :label-width="formLabelWidth" prop="rid">
+          <el-select v-model="assignForm.rid" placeholder="请选择">
+            <el-option
+              v-for="item in roleList"
+              :key="item.id"
+              :label="item.roleName"
+              :value="item.id">
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="assignShow = false">取 消</el-button>
+        <el-button type="primary" @click="assignRole">确 定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -173,10 +195,35 @@ export default {
             trigger: 'blur'
           }
         ]
-      }
+      },
+      // 角色分配
+      assignForm: {
+        username: '',
+        roleName: '',
+        id: '',
+        rid: ''
+      },
+      // 角色分配表单验证
+      assignRules: {
+        rid: [{ required: true, message: '请选择一个权限', trigger: 'blur' }]
+      },
+      // 角色分配显示隐藏
+      assignShow: false,
+      // 下拉框数据列表
+      roleList: {},
+      value: ''
     }
   },
   methods: {
+    // 获取所有角色信息
+    async getRoleList() {
+      let res = await this.axios.get('roles')
+      let { meta: { status }, data } = res
+      // console.log(res)
+      if (status === 200) {
+        this.roleList = data
+      }
+    },
     // 封装列表渲染
     getUserList() {
       this.axios
@@ -312,6 +359,50 @@ export default {
             }
           })
       })
+    },
+    // 点击显示分配角色对话框
+    async assignRoleShow(role) {
+      // 显示对话框
+      this.assignShow = true
+      this.assignForm.id = role.id
+      this.assignForm.username = role.username
+      // 获取角色数据
+      // 发送请求获取角色id
+      let res = await this.axios.get(`users/${this.assignForm.id}`)
+      // console.log(res)
+      let { meta: { status }, data: { rid } } = res
+      if (status === 200) {
+        if (rid === -1) {
+          rid = ''
+        }
+        this.assignForm.rid = rid
+      }
+      // 获取角色列表
+      this.getRoleList()
+    },
+    // 点确定实现分配角色功能
+    assignRole() {
+      // 验证表单
+      this.$refs.assignForm.validate(async valid => {
+        if (valid) {
+          let { id, rid } = this.assignForm
+          let res = await this.axios.put(`users/${id}/role`, {
+            rid
+          })
+          // console.log(res)
+          let { meta: { status } } = res
+          if (status === 200) {
+            // 隐藏对话框
+            this.assignShow = false
+            // 重新渲染
+            this.getRoleList()
+            // 提示成功
+            this.$message.success('分配成功')
+            // 清空表单
+            this.$refs.assignForm.resetFields()
+          }
+        }
+      })
     }
   },
   created() {
@@ -322,12 +413,4 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.el-breadcrumb {
-  height: 30px;
-  line-height: 30px;
-}
-.input-with-select {
-  width: 350px;
-  margin-bottom: 5px;
-}
 </style>

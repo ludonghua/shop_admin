@@ -8,6 +8,21 @@ import 'element-ui/lib/theme-chalk/index.css'
 import './assets/common.css'
 // 把axios封装到Vue 的原型上
 import axios from 'axios'
+import ElTreeGrid from 'element-tree-grid'
+// 导入moment、
+import moment from 'moment'
+// 定义一个全局时间过滤器
+Vue.filter('dateFilter', (input, format = 'YYYY-MM-DD HH:mm:ss') => {
+  return moment(input * 1000).format(format)
+})
+// 创建一个全局组件
+Vue.component('el-element-tree-column', ElTreeGrid)
+// 富文本编辑器
+import VueQuillEditor from 'vue-quill-editor'
+import 'quill/dist/quill.core.css'
+import 'quill/dist/quill.snow.css'
+import 'quill/dist/quill.bubble.css'
+Vue.use(VueQuillEditor)
 Vue.prototype.axios = axios
 // 配置axios的全局的默认baseURL
 axios.defaults.baseURL = 'http://localhost:8888/api/private/v1/'

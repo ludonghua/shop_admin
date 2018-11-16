@@ -54,12 +54,11 @@ export default {
               password: this.form.password
             })
             .then(res => {
-              console.log(res.data)
               this.$message({
-                message: res.data.meta.msg,
+                message: res.meta.msg,
                 type: 'success'
               })
-              localStorage.setItem('token', res.data.data.token)
+              localStorage.setItem('token', res.data.token)
               this.$router.push('/home')
             })
         } else {
